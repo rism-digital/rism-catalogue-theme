@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "outDir": "assets/js",
+    "rootDir": "./src",
+    "sourceMap": true
+  },
+  "includes": [
+    "*.ts"
+  ],
+  "exclude": [
+    "_site/*"
+  ]
+}

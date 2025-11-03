@@ -1,0 +1,291 @@
+// Define class for the Object returned by Lunr
+export class LunrResult {
+    ref: string;
+}
+
+// Define class for the document structure
+export class Document {
+    id: string;
+    title: string;
+    catalogNumber?: string;
+    keyMode?: string;
+    scoringSummary?: string;
+    textIncipit: string[];
+    incipit: string;
+};
+
+// Define class for the paginated results structure
+export class PaginatedResults {
+    page: number;
+    resultsPerPage: number;
+    totalResults: number;
+    totalPages: number;
+    results: Document[];
+}
+
+// Define the filter options interface
+export class CustomFilter {
+    keyMode?: string;
+};
+
+// Global for allowing use of lunr included via cdn
+declare global {
+    const lunr;
+}
+
+let keyModeMap: Object = undefined;
+
+let searchResultsDiv = document.querySelector<HTMLDivElement>("#search-results");
+let template = document.querySelector<HTMLTemplateElement>("#search-item-template");
+let searchResultsCount = document.querySelector<HTMLSpanElement>("#search-results-count");
+let searchResultsShow = document.querySelector<HTMLSpanElement>("#search-results-show");
+
+let facetsDiv1 = document.querySelector<HTMLDivElement>("#facet1");
+let facetTemplate = document.querySelector<HTMLTemplateElement>("#facet-template");
+
+let paginationDiv = document.querySelector<HTMLDivElement>("#pagination");
+let paginationTemplate = document.querySelector<HTMLTemplateElement>("#pagination-template");
+
+let form = document.querySelector<HTMLFormElement>("#search-form");
+
+// A lookup table of the indexed documents
+let documentLookup: Record<string, Document> = {};
+
+// Function to get document by ID using the lookup table
+function getDocumentById(id: string): Document | undefined {
+    return documentLookup[id];
+}
+
+// Function to paginate results
+function paginateResults(results: Document[], page = 1, resultsPerPage = 10): PaginatedResults {
+    const paginatedResults = new PaginatedResults();
+    paginatedResults.page = page;
+    paginatedResults.resultsPerPage = resultsPerPage;
+    paginatedResults.totalResults = results.length;
+    paginatedResults.totalPages = Math.ceil(paginatedResults.totalResults / resultsPerPage);
+
+    const start = (page - 1) * resultsPerPage;
+    const end = start + resultsPerPage;
+
+    paginatedResults.results = results.slice(start, end);
+
+    return paginatedResults;
+}
+
+// Function to aggregate facets
+function aggregateFacets(results: Document[], facetName: keyof Document): Record<string, number> {
+    const facets: Record<string, number> = {};
+
+    results.forEach(doc => {
+        const facetValue = doc[facetName];
+
+        if (Array.isArray(facetValue)) {
+            facetValue.forEach(val => facets[val] = (facets[val] || 0) + 1);
+        } else if (facetValue) {
+            facets[facetValue] = (facets[facetValue] || 0) + 1;
+        }
+    });
+
+    return facets;
+}
+
+// Function to add text or hide element
+function addTextOrHide(text: string, element: HTMLElement) {
+    if (text) {
+        element.innerHTML = text
+    }
+    else {
+        element.style.display = 'none';
+    }
+}
+
+// Function to render the results
+function renderResults(paginatedResults: PaginatedResults) {
+    searchResultsCount.innerHTML = `${paginatedResults.totalResults}`;
+    if (paginatedResults.totalPages > 1) {
+        const first = paginatedResults.resultsPerPage * (paginatedResults.page - 1) + 1;
+        const last = Math.min(first + paginatedResults.resultsPerPage - 1, paginatedResults.totalResults);
+        searchResultsShow.innerHTML += ` (${first} – ${last})`;
+    }
+    paginatedResults.results.forEach(doc => {
+        const output = document.importNode(template.content, true);
+        const title = output.querySelector<HTMLAnchorElement>("a.docTitle");
+        const scoringSummary = output.querySelector<HTMLParagraphElement>("p.scoringSummary");
+        const keyMode = output.querySelector<HTMLParagraphElement>("p.keyMode");
+        const instr = output.querySelector<HTMLParagraphElement>("p.textIncipit");
+        const incipit = output.querySelector<HTMLImageElement>("img.incipit");
+
+        const div = document.createElement("div");
+        div.innerHTML = doc.title + " – " + doc.catalogNumber;
+        title.setAttribute("href", "./resolve.html?id=" + doc.id.replace(/^https:\/\/rism.online\/(.*)$/i, "rism:$1"));
+        title.appendChild(div);
+        addTextOrHide(doc.scoringSummary, scoringSummary);
+        if (doc.keyMode) {
+            keyMode.innerHTML = (keyModeMap) ? keyModeMap[doc.keyMode] : doc.keyMode;
+        }
+        else keyMode.style.display = 'none';
+        if (doc.textIncipit !== undefined) {
+            instr.innerHTML = doc.textIncipit.join(", ").substring(0, 200) + '...';
+        }
+        else instr.style.display = 'none';
+        if (doc.incipit !== undefined) {
+            incipit.setAttribute("src", "./incipits/" + doc.incipit + ".svg");
+        }
+        else incipit.style.display = 'none';
+
+        searchResultsDiv.appendChild(output);
+    });
+}
+
+// Function to create a facet option node
+function createFacetOption(facet: string, facetName: string, facetLabel: string, checked: boolean) {
+    const option = document.importNode(facetTemplate.content, true);
+    const label = option.querySelector<HTMLLabelElement>("label.checkbox span");
+    const input = option.querySelector<HTMLInputElement>("input");
+
+    label.innerHTML = facetLabel;
+    input.setAttribute("name", facetName);
+    input.setAttribute("value", facet);
+
+    if (checked) {
+        input.setAttribute("checked", "true");
+    }
+
+    // Add event listener for selecting this facet
+    input.addEventListener('click', () => { form.submit(); });
+
+    return option;
+}
+
+// Function to render the facet
+function renderFacet(div: HTMLDivElement, facets: Record<string, number>, facetName: string, applied: string[], labelMap: Object = undefined) {
+    div.innerHTML = '';
+
+    for (const facet in facets) {
+        let label = (labelMap) ? labelMap[facet] : facet;
+        const option = createFacetOption(facet, facetName, `${label} (${facets[facet]})`, applied.includes(facet));
+        div.appendChild(option);
+    }
+}
+
+// Function to create a pagination button node
+function createPaginationButton(page: number, text: string, current: boolean = false): HTMLAnchorElement {
+    const params = new URLSearchParams(location.search);
+    const a = document.importNode(paginationTemplate.content, true).querySelector<HTMLAnchorElement>("a")!;
+    a.innerHTML = text;
+    params.set('page', page.toString());
+    a.setAttribute("href", "?" + params.toString());
+    if (current) {
+        a.classList.remove("is-light");
+        a.setAttribute("disabled", "true");
+    }
+    return a;
+}
+
+// Function to render the pagination controls
+function renderPagination(paginatedResults: PaginatedResults) {
+    const page = paginatedResults.page;
+
+    // Previous Button
+    if (page > 1) {
+        paginationDiv.appendChild(createPaginationButton(1, "&lt;&lt;"));
+        paginationDiv.appendChild(createPaginationButton(page - 1, "&lt;"));
+    }
+
+    // Page Numbers
+    const pageWindow = 5; // Number of pages to display at once
+    let startPage = Math.max(1, page - Math.floor(pageWindow / 2));
+    let endPage = Math.min(paginatedResults.totalPages, startPage + pageWindow - 1);
+
+    if (endPage - startPage < pageWindow - 1) {
+        startPage = Math.max(1, endPage - pageWindow + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        paginationDiv.appendChild(createPaginationButton(i, `${i}`, (page === i)));
+    }
+
+    // Next Button
+    if (page < paginatedResults.totalPages) {
+        paginationDiv.appendChild(createPaginationButton(page + 1, "&gt;"));
+        paginationDiv.appendChild(createPaginationButton(paginatedResults.totalPages, "&gt;&gt;"));
+    }
+}
+
+// Function to apply a custom filter 
+function filterResults(results: Document[], filterOptions: CustomFilter): Document[] {
+
+    // Apply manual filtering based on filterOptions
+    if (filterOptions.keyMode) {
+        results = results.filter(function (doc) {
+            return doc.scoringSummary.includes(filterOptions.keyMode);
+        });
+    }
+
+    return results;
+}
+
+Promise.all([
+    fetch("./index/keyMode.json").then(r => r.json()),
+    fetch("./index/index.json").then(r => r.json())
+])
+    .then(([keyModeData, documents]) => {
+        keyModeMap = keyModeData;
+
+        documents.forEach(doc => {
+            documentLookup[doc.id] = doc;
+        });
+
+        // Create the lunr index
+        const idx = lunr(function () {
+            this.field('title');
+            this.ref('id');
+            this.field('catalogNumber');
+            this.field('scoringSummary');
+            this.field('keyMode');
+            this.field('incipitText');
+
+            documents.forEach(doc => {
+                this.add(doc);
+            });
+        });
+
+        let page: number = 1;
+        const query: string[] = [];
+        const appliedInstr: string[] = [];
+
+        // Parse the URL parameters
+        const params = new URLSearchParams(document.location.search.substring(1));
+        params.forEach((value, key) => {
+            if (key === 'q' && value !== "") {
+                (document.getElementById("website-search") as HTMLInputElement).value = value;
+                query.push("+" + value);
+            } else if (key === 'keyMode') {
+                query.push("+keyMode:" + value);
+                appliedInstr.push(value);
+            } else if (key === "page") {
+                page = parseInt(value);
+            }
+        });
+
+        let idxResults: LunrResult[] = idx.search(query.join(" "));
+
+        // Map results to the original documents
+        let searchResults: Document[] = idxResults.map(function (result) {
+            return getDocumentById(result.ref);
+        });
+
+        let filterOptions: CustomFilter = new CustomFilter();
+        let filteredResults: Document[] = filterResults(searchResults, filterOptions);
+
+        // Pagination: Get results for page 1 with 20 results per page
+        const resultsPerPage: number = 20;
+        const paginatedResults: PaginatedResults = paginateResults(filteredResults, page, resultsPerPage);
+
+        renderResults(paginatedResults);
+        renderPagination(paginatedResults);
+
+        const categoryFacets: Record<string, number> = aggregateFacets(filteredResults, 'keyMode');
+        renderFacet(facetsDiv1, categoryFacets, 'keyMode', appliedInstr, keyModeMap);
+    })
+    .catch(error => console.error("Error loading data:", error));

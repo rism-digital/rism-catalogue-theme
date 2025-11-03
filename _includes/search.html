@@ -1,0 +1,46 @@
+{% assign search_results = site.data.locales | where: "id", "search-results" | first %}
+{% assign search_results_count = site.data.locales | where: "id", "search-results-count" | first %}
+
+
+<div id="search-results-header">
+    <h1>{{ search_results.name[site.active_lang] }}</h1>
+    <p id="search-results-p" class="mb-5"><i><span id="search-results-count"></span> {{ search_results_count.name[site.active_lang] }} <span id="search-results-show"></span></i></p>
+</div>
+
+<div id="search-results">
+</div>
+
+<div id="pagination" class="buttons">
+</div>
+
+<template id="search-item-template">
+    <div class="ro-work">
+        <div class="ro-labelledlink">
+            <a class="docTitle"></a>
+            <div>
+                <p class="scoringSummary mb-1"></p>
+                <p class="keyMode mb-1"></p>
+                <p class="textIncipit is-italic"></p>
+                <img class="incipit"/>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template id="facet-template">
+    <div class="field">
+        <div class="control">
+            <label class="checkbox">
+                <input type="checkbox">
+                <span></span>
+            </label>
+        </div>
+    </div>
+</template>
+
+<template id="pagination-template">
+    <a class="button is-small is-primary is-light"></a>
+</template>
+
+<script src="{{ site.baseurl}}/assets/js/lunr.js"></script>
+<script type="module" src="{{ site.baseurl}}/assets/js/search.js" defer></script>
