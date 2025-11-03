@@ -1,0 +1,4 @@
+<div {%if include.margin %}class="pt-4"{% endif %}>
+    {% capture output %}{% include {{ include.sidepanel }}.{{ page.lang }}.md %}{% endcapture %}
+    {{ output | markdownify }}
+</div>

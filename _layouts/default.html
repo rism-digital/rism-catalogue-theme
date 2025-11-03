@@ -1,0 +1,45 @@
+---
+---
+
+{% assign sidepanel = layout.sidepanel %}
+{% if sidepanel == nil or sidepanel == blank %}{% assign sidepanel = page.sidepanel %}{% endif %}
+
+{% if menubar or sidepanel %} 
+    {% assign content_width = 'is-8' %} 
+{% else %} 
+    {% assign content_width = 'is-12' %} 
+{% endif %}
+
+<!DOCTYPE html>
+<html>
+  {% include head.html %}
+  <body>
+    <div id="wrapper">
+        {% include hero.html %}
+        {% include header.html %}
+        <section class="section">
+            <div class="container">
+                <div class="columns is-variable is-8">
+                    {% if sidepanel and page.sideleft == true %}
+                    <div class="column is-4-desktop is-4-tablet side-content">
+                        {% if sidepanel != nil and sidepanel != blank and sidepanel != '' %}{% include sidepanel.html sidepanel=sidepanel %}{% endif %}
+                    </div>
+                    {% endif %}
+                    <div class="column {{ content_width }}">
+                        <div class="content">
+                        {{ content }}
+                        </div>
+                    </div>
+                    {% if sidepanel and page.sideleft == nil %}
+                    <div class="column is-4-desktop is-4-tablet side-content">
+                        {% if sidepanel != nil and sidepanel != blank and sidepanel != '' %}{% include sidepanel.html sidepanel=sidepanel %}{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </div>
+    {% include footer.html %}
+  </body>
+</html>
+

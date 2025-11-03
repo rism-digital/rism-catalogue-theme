@@ -1,0 +1,22 @@
+---
+title: "Page not found"
+layout: default
+permalink: /404.html
+---
+
+<div class="columns is-centered">
+    <div class="column is-half has-text-centered">        
+        <div class="notification is-warning is-light mb-8">
+            <p class="is-size-4">Page not found ...</p>
+            <p>
+                Some of our pages have moved. 
+                {% if site.enable_search %}
+                If you cannot find the page you need, you can try <a href="/search.html">searching the website</a>, or contact us at <a href="{{ site.email }}">{{ site.email }}</a> and we will assist you.
+                {% else %}
+                If you cannot find the page you need, please contact us at <a href="{{ site.email }}">{{ site.email }}</a> and we will assist you.
+                {% endif %}
+            </p>
+        </div>
+        <img class="mt-6" src="/assets/images/404.png"/>
+    </div>
+</div>
