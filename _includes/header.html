@@ -35,8 +35,10 @@
 
             <div class="navbar-end">
                 {% if site.languages.size > 1 %}
-                <a class="navbar-item {% if site.active_lang == "en" %}disabled"{% endif %}" href="{{ site.baseurl | append: " " | append: page.permalink }}">EN</a>
+                <a class="navbar-item {% if site.active_lang == "en" %}disabled"{% endif %}" href="{{ site.baseurl | append: "" | append: page.permalink }}">EN</a>
                 {% if site.languages contains 'de' %}<a class="navbar-item {% if site.active_lang == "de" %}disabled{% endif %}" href="{{ site.baseurl | append: "/de" | append: page.permalink }}">DE</a>{% endif %}
+                {% if site.languages contains 'fr' %}<a class="navbar-item {% if site.active_lang == "de" %}disabled{% endif %}" href="{{ site.baseurl | append: "/fr" | append: page.permalink }}">FR</a>{% endif %}
+                {% if site.languages contains 'it' %}<a class="navbar-item {% if site.active_lang == "de" %}disabled{% endif %}" href="{{ site.baseurl | append: "/it" | append: page.permalink }}">IT</a>{% endif %}
                 {% endif %}
             </div>
 
