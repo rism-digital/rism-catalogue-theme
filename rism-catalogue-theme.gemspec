@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name          = "rism-catalogue-theme"
-  spec.version       = "1.0.2"
+  spec.version       = "1.0.3"
   spec.authors       = ["Rodolfo Zitellini", "Andrew Hankinson", "Laurent Pugin"]
   spec.email         = ["rodolfo.zitellini@rism.digital", "andrew.hankinson@rism.digital", "laurent.pugin@rism.digital"]
 
