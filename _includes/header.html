@@ -38,8 +38,8 @@
                 {% assign en_url = site.baseurl | append: page.permalink %}
                 <a class="navbar-item {% if site.active_lang == "en" %}disabled"{% endif %}" {% static_href %}href="{{ en_url }}"{% endstatic_href %}>EN</a>
                 {% if site.languages contains 'de' %}<a class="navbar-item {% if site.active_lang == "de" %}disabled{% endif %}" href="{{ site.baseurl | append: "/de" | append: page.permalink }}">DE</a>{% endif %}
-                {% if site.languages contains 'fr' %}<a class="navbar-item {% if site.active_lang == "de" %}disabled{% endif %}" href="{{ site.baseurl | append: "/fr" | append: page.permalink }}">FR</a>{% endif %}
-                {% if site.languages contains 'it' %}<a class="navbar-item {% if site.active_lang == "de" %}disabled{% endif %}" href="{{ site.baseurl | append: "/it" | append: page.permalink }}">IT</a>{% endif %}
+                {% if site.languages contains 'fr' %}<a class="navbar-item {% if site.active_lang == "fr" %}disabled{% endif %}" href="{{ site.baseurl | append: "/fr" | append: page.permalink }}">FR</a>{% endif %}
+                {% if site.languages contains 'it' %}<a class="navbar-item {% if site.active_lang == "it" %}disabled{% endif %}" href="{{ site.baseurl | append: "/it" | append: page.permalink }}">IT</a>{% endif %}
                 {% endif %}
             </div>
 
