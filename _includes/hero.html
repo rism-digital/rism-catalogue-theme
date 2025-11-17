@@ -3,10 +3,8 @@
         <div class="container">
             <div class="level">
                 <div class="level-left">
-                    <div>
-                        <h1>{{ site.title }}</h1>
-                        <h2 class="is-hidden-mobile">{{ site.subtitle }}</h2>
-                    </div>
+                    <span class="is-hidden-mobile">{{ site.title[site.active_lang] }}</span>
+                    <span class="is-hidden-tablet">{{ site.title_mobile[site.active_lang] }}</span>
                 </div>
                 <div class="level-right">
                     <img src="{{ site.baseurl }}/images/logo-square-small.png" class="is-hidden-mobile">

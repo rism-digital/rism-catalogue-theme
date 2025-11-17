@@ -3,7 +3,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {% assign title = page.title %}
     {% if page.titles %}{% assign title = page.titles[site.active_lang] %}{% endif %}
-    <title>{{ title }} - {{ site.title }}</title>
+    <title>{{ title }} - {{ site.title[site.active_lang] }}</title>
     <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/app.css">
     <link rel="shortcut icon" type="image/png" href=" {{ site.baseurl }}/images/favicon.png"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css">
